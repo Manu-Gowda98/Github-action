@@ -7,7 +7,6 @@ on:
 
 env:
   DAY_OF_WEEK: Monday
-  aws_account_id: ${{var.Account_id}}
 
 
 jobs:
@@ -21,7 +20,7 @@ jobs:
         env:
           First_Name: to  github action  tutorial
   S3_Bucket_deploy in aws :
-    -name: Deploy s3 bucket
+    name: Deploy s3 bucket
     runs-on: ubuntu-latest
 
     steps:
