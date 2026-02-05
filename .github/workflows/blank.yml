@@ -1,10 +1,14 @@
 name: Greeting on variable day
 
 on:
- push
+ push:
+    branches:
+      - main
 
 env:
   DAY_OF_WEEK: Monday
+  aws_account_id: ${{var.Account_id}}
+
 
 jobs:
   greeting_job:
@@ -16,4 +20,35 @@ jobs:
         run: echo "$Greeting $First_Name. Today is $DAY_OF_WEEK!"
         env:
           First_Name: to  github action  tutorial
+  S3_Bucket_deploy in aws :
+    -name: Deploy s3 bucket
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Validate CloudFormation Template
+        run: |
+          aws cloudformation validate-template --template-body file://template.yaml
+
+      - name: Deploy CloudFormation Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file template.yaml \
+            --stack-name s3-bucket-stack \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset
+
+      - name: Describe Stack Outputs
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name s3-bucket-stack \
+            --query "Stacks[0].Outputs"

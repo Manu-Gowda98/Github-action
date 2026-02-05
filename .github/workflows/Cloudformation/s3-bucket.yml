@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create an S3 bucket with ownership controls and AwsExecRead ACL.
+
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: Manu_private_bucket
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      AccessControl: AwsExecRead
+
+Outputs:
+  BucketName:
+    Description: Name of the created S3 bucket
+    Value: !Ref MyBucket
+
+  BucketArn:
+    Description: ARN of the created S3 bucket
+    Value: !GetAtt MyBucket.Arn
