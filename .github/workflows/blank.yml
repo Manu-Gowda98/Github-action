@@ -36,12 +36,12 @@ jobs:
 
       - name: Validate CloudFormation Template
         run: |
-          aws cloudformation validate-template --template-body file://template.yaml
+          aws cloudformation validate-template --template-body file Cloudformation/s3-bucket.yml
 
       - name: Deploy CloudFormation Stack
         run: |
           aws cloudformation deploy \
-            --template-file template.yaml \
+            --template-file Cloudformation/s3-bucket.yml \
             --stack-name s3-bucket-stack \
             --capabilities CAPABILITY_NAMED_IAM \
             --no-fail-on-empty-changeset
