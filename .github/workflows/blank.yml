@@ -75,8 +75,8 @@ jobs:
           aws cloudformation validate-template --template-body file://Cloudformation/eks-iam-role.yml
       
       - name: Creating iam role for eks
-        run: 
-            aws cloudformation deploy \
+        run: |
+          aws cloudformation deploy \
             --template-file Cloudformation/eks-iam-role.yml \
             --stack-name eks-role-stack \
             --capabilities CAPABILITY_NAMED_IAM 
@@ -92,8 +92,8 @@ jobs:
       - name: Deploy EKS Cluster using CloudFormation
         run: |
           aws cloudformation deploy \
-          --template-file Cloudformation/eks.yml \
-          --stack-name eks-cluster-stack \
-          --capabilities CAPABILITY_NAMED_IAM \
-          --parameter-overrides EKSClusterRoleARN=$ROLE_ARN \
-          --no-fail-on-empty-changeset
+           --template-file Cloudformation/eks.yml \
+           --stack-name eks-cluster-stack \
+           --capabilities CAPABILITY_NAMED_IAM \
+           --parameter-overrides EKSClusterRoleARN=$ROLE_ARN \
+           --no-fail-on-empty-changeset
