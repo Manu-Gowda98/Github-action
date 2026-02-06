@@ -141,17 +141,11 @@ jobs:
           role-to-assume: arn:aws:iam::640740720651:role/Github-actionrole
           aws-region: ap-south-1
 
-       # Step 3: Update kubeconfig to access EKS
-      - name: Update kubeconfig
-        run: |
-          aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name nginx-cluster
-
-      # Step 4: Apply Kubernetes manifests
-      - name: Deploy Nginx Deployment
-        run: |
-          kubectl apply -f deploy/deployment.yml
-          kubectl apply -f deploy/service.yml 
-
+      - name: Trigger AWS CodeBuild
+        run: 
+          aws codebuild start-build \
+            --project-name nginx-helm-deploy \
+            --environment-variables-override
 
 
            
