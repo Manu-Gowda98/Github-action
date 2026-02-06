@@ -19,6 +19,8 @@ jobs:
         run: echo "$Greeting $First_Name. Today is $DAY_OF_WEEK!"
         env:
           First_Name: " to  github action  tutorial"
+
+
   S3_Bucket_deploy_in_aws:
     name: Deploy s3 bucket
     runs-on: ubuntu-latest
@@ -36,7 +38,7 @@ jobs:
 
       - name: Validate CloudFormation Template
         run: |
-          aws cloudformation validate-template --template-body  validate-template --template-body file://Cloudformation/s3-bucket.yml
+          aws cloudformation validate-template --template-body file://Cloudformation/s3-bucket.yml
 
 
       - name: Deploy CloudFormation Stack
@@ -52,3 +54,28 @@ jobs:
           aws cloudformation describe-stacks \
             --stack-name s3-bucket-stack \
             --query "Stacks[0].Outputs"
+  eks_cluster:
+    name: eks_cluster_creation
+    runs-on: ubuntu-latest
+    needs: S3_Bucket_deploy_in_aws
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Validate CloudFormation Template
+        run: |
+          aws cloudformation validate-template --template-body file://Cloudformation/eks.yml
+      - name: Deploy EKS Cluster using CloudFormation
+        run: |
+          aws cloudformation deploy \
+          --template-file Cloudformation/eks.yml \
+          --stack-name eks-cluster-stack \
+          --capabilities CAPABILITY_NAMED_IAM \
+          --no-fail-on-empty-changeset

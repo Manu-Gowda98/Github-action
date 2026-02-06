@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cloudformation template to create eks cluster
+
+Resources:              
+  EKSCluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: nginx-cluster
+      Version: "1.20"
+      RoleArn: "arn:aws:iam::640740720651:role/aws-service-role/eks.amazonaws.com/AWSServiceRoleForAmazonEKS"
+      ResourcesVpcConfig:
+        SecurityGroupIds:
+          - sg-03c7d491ead4b428c
+        SubnetIds:
+          - subnet-0a501ae8950156e8a
+          - subnet-030dbee7d1358f4a4
+        EndpointPublicAccess: false
+        EndpointPrivateAccess: true
+        PublicAccessCidrs: [ "1.1.1.2/32" ]
+      Logging:
+        ClusterLogging:
+          EnabledTypes:
+            - Type: api
+            - Type: audit
+      Tags:
+        - Key: "app"
+          Value: "nginx"
+Outputs: 
+  ClusterName:
+    Description: Name of the EKS Cluster
+    Value: !Ref EKSCluster
+  ClusterArn:
+    Description: ARN of the EKS Cluster
+    Value: !GetAtt EKSCluster.Arn
