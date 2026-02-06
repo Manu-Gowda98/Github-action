@@ -77,7 +77,7 @@ jobs:
       - name: Creating iam role for eks
         run: 
             aws cloudformation deploy \
-            --template-file Cloudformation/eks-role.yml \
+            --template-file Cloudformation/eks-iam-role.yml \
             --stack-name eks-role-stack \
             --capabilities CAPABILITY_NAMED_IAM 
       - name: Get IAM Role ARN
