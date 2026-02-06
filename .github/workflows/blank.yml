@@ -8,6 +8,9 @@ on:
 env:
   DAY_OF_WEEK: Monday
 
+permissions:
+  id-token: write      # REQUIRED for OIDC authentication
+  contents: read 
 
 jobs:
   greeting_job:
