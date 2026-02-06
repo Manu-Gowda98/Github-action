@@ -121,9 +121,10 @@ jobs:
        - name: Deploy EKS Add-ons
          run: |
            aws cloudformation deploy \
-            --template-file Cloudformation/eks-addons.yml \
+            --template-file Cloudformation/addons.yml \
             --stack-name eks-addons-stack \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides EKSClusterName=nginx-cluster
 
            
+ 
