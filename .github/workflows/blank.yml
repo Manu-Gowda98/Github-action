@@ -72,10 +72,28 @@ jobs:
       - name: Validate CloudFormation Template
         run: |
           aws cloudformation validate-template --template-body file://Cloudformation/eks.yml
+          aws cloudformation validate-template --template-body file://Cloudformation/eks-iam-role.yml
+      
+      - name: Creating iam role for eks
+        run: 
+            aws cloudformation deploy \
+            --template-file Cloudformation/eks-role.yml \
+            --stack-name eks-role-stack \
+            --capabilities CAPABILITY_NAMED_IAM 
+      - name: Get IAM Role ARN
+        id: role
+        run: |
+          ROLE_ARN=$(aws cloudformation describe-stacks \
+            --stack-name eks-role-stack \
+            --query "Stacks[0].Outputs[?OutputKey=='EKSClusterRoleARN'].OutputValue" \
+            --output text)
+          echo "ROLE_ARN=$ROLE_ARN" >> $GITHUB_ENV
+
       - name: Deploy EKS Cluster using CloudFormation
         run: |
           aws cloudformation deploy \
           --template-file Cloudformation/eks.yml \
           --stack-name eks-cluster-stack \
           --capabilities CAPABILITY_NAMED_IAM \
+          --parameter-overrides EKSClusterRoleARN=$ROLE_ARN \
           --no-fail-on-empty-changeset

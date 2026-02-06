@@ -1,32 +1,18 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Cloudformation template to create eks cluster with iam role
+Description: Create EKS Cluster
 
-Resources:              
-  EKSClusterRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - eks.amazonaws.com
-            Action:
-            - sts:AssumeRole
-      ManagedPolicyArns:
-          - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
-          - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+Parameters:
+  EKSClusterRoleARN:
+    Type: String
+    Description: IAM role ARN for EKS cluster
 
-  
-  
-  
+Resources:
   EKSCluster:
     Type: AWS::EKS::Cluster
     Properties:
       Name: nginx-cluster
-      Version: "1.29"
-      RoleArn: !GetAtt EKSClusterRole.Arn
+      Version: "1.28"
+      RoleArn: !Ref EKSClusterRoleARN
       ResourcesVpcConfig:
         SecurityGroupIds:
           - sg-03c7d491ead4b428c
@@ -35,22 +21,17 @@ Resources:
           - subnet-030dbee7d1358f4a4
         EndpointPublicAccess: false
         EndpointPrivateAccess: true
-        PublicAccessCidrs: [ "1.1.1.2/32" ]
       Logging:
         ClusterLogging:
           EnabledTypes:
             - Type: api
             - Type: audit
       Tags:
-        - Key: "app"
-          Value: "nginx"
-Outputs: 
+        - Key: app
+          Value: nginx
+
+Outputs:
   ClusterName:
-    Description: Name of the EKS Cluster
     Value: !Ref EKSCluster
   ClusterArn:
-    Description: ARN of the EKS Cluster
     Value: !GetAtt EKSCluster.Arn
-  EKSClusterRoleARN:
-    Description: ARN role of the EKS Cluster
-    Value: !GetAtt EKSClusterRole.Arn
