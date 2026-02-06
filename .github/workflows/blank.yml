@@ -97,3 +97,17 @@ jobs:
            --capabilities CAPABILITY_NAMED_IAM \
            --parameter-overrides EKSClusterRoleARN=$ROLE_ARN \
            --no-fail-on-empty-changeset
+  eks-addons:
+    name: eks-addon
+    runs-on: ubuntu-latest
+    needs: eks_cluster
+    steps:
+      - name: Deploy EKS Add-ons
+        run: |
+           aws cloudformation deploy \
+            --template-file Cloudformation/eks-addons.yml \
+            --stack-name eks-addons-stack \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides EKSClusterName=nginx-cluster
+
+           
