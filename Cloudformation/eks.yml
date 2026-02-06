@@ -1,13 +1,32 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Cloudformation template to create eks cluster
+Description: Cloudformation template to create eks cluster with iam role
 
 Resources:              
+  EKSClusterRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - eks.amazonaws.com
+            Action:
+            - sts:AssumeRole
+      ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+          - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+
+  
+  
+  
   EKSCluster:
     Type: AWS::EKS::Cluster
     Properties:
       Name: nginx-cluster
-      Version: "1.20"
-      RoleArn: "arn:aws:iam::640740720651:role/aws-service-role/eks.amazonaws.com/AWSServiceRoleForAmazonEKS"
+      Version: "1.29"
+      RoleArn: !GetAtt EKSClusterRole.Arn
       ResourcesVpcConfig:
         SecurityGroupIds:
           - sg-03c7d491ead4b428c
@@ -32,3 +51,6 @@ Outputs:
   ClusterArn:
     Description: ARN of the EKS Cluster
     Value: !GetAtt EKSCluster.Arn
+  EKSClusterRoleARN:
+    Description: ARN role of the EKS Cluster
+    Value: !GetAtt EKSClusterRole.Arn
