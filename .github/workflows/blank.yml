@@ -4,6 +4,8 @@ on:
  push:
     branches:
       - main
+      - qa
+      - dev
 
 env:
   DAY_OF_WEEK: Monday
@@ -76,12 +78,28 @@ jobs:
           aws cloudformation validate-template --template-body file://Cloudformation/eks.yml
           aws cloudformation validate-template --template-body file://Cloudformation/eks-iam-role.yml
       
+      - name: Check Stack Status
+        id: stackcheck
+        run: |
+          STATUS=$(aws cloudformation describe-stacks \
+            --stack-name eks-role-stack \
+            --query "Stacks[0].StackStatus" \
+            --output text 2>/dev/null || echo "STACK_NOT_FOUND")
+
+          echo "Stack status: $STATUS"
+
+          if [ "$STATUS" = "ROLLBACK_COMPLETE" ]; then
+            echo "Deleting failed stack..."
+            aws cloudformation delete-stack --stack-name eks-role-stack
+            aws cloudformation wait stack-delete-complete --stack-name eks-role-stack
+          fi
       - name: Creating iam role for eks
         run: |
           aws cloudformation deploy \
             --template-file Cloudformation/eks-iam-role.yml \
             --stack-name eks-role-stack \
-            --capabilities CAPABILITY_NAMED_IAM 
+            --capabilities CAPABILITY_NAMED_IAM
+            --no-fail-on-empty-changeset 
       - name: Get IAM Role ARN
         id: role
         run: |
@@ -142,10 +160,13 @@ jobs:
           aws-region: ap-south-1
 
       - name: Trigger AWS CodeBuild
-        run: 
+        run: |
           aws codebuild start-build \
-            --project-name nginx-helm-deploy \
-            --environment-variables-override
+           --project-name nginx-helm-deploy \
+           --environment-variables-override \
+           name=IMAGE_TAG,value=${{ github.sha }} \
+           name=ENV,value=prod
+
 
 
            
