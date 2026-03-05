@@ -6,6 +6,7 @@ on:
       - main
       - qa
       - dev
+      - feature
 
 env:
   DAY_OF_WEEK: Monday
