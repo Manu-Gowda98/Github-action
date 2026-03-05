@@ -5,7 +5,7 @@ Resources:
   GitHubActionsRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: GitHubActionsRole
+      RoleName: Github-actionrole
 
       AssumeRolePolicyDocument:
         Version: '2012-10-17'

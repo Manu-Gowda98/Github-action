@@ -36,7 +36,7 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::640740720651:role/Github-actionrole
+          role-to-assume: arn:aws:iam::640740720651:role/bootstramp
           aws-region: ap-south-1
 
 
@@ -72,7 +72,7 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::640740720651:role/Github-actionrole
+          role-to-assume: arn:aws:iam::640740720651:role/bootstramp
           aws-region: ap-south-1
 
 
@@ -105,7 +105,7 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::640740720651:role/Github-actionrole
+          role-to-assume: arn:aws:iam::640740720651:role/bootstramp
           aws-region: ap-south-1
 
       - name: Validate CloudFormation Template
@@ -163,7 +163,7 @@ jobs:
        - name: Configure AWS credentials via OIDC
          uses: aws-actions/configure-aws-credentials@v4
          with:
-          role-to-assume: arn:aws:iam::640740720651:role/Github-actionrole
+          role-to-assume: arn:aws:iam::640740720651:role/bootstramp
           aws-region: ap-south-1
 
        - name: Validate CloudFormation Template
