@@ -61,8 +61,14 @@ Resources:
               # IAM Read Only
               - Effect: Allow
                 Action:
-                  - iam:Get*
-                  - iam:List*
+                 - iam:CreateRole
+                 - iam:AttachRolePolicy
+                 - iam:DetachRolePolicy
+                 - iam:DeleteRole
+                 - iam:CreateInstanceProfile
+                 - iam:AddRoleToInstanceProfile
+                 - iam:RemoveRoleFromInstanceProfile
+                 - iam:DeleteInstanceProfile
                 Resource: "*"
 
               # Pass Role Permission
