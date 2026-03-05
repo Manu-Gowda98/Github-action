@@ -33,11 +33,7 @@ Resources:
               # EC2 networking required for EKS
               - Effect: Allow
                 Action:
-                  - ec2:Describe*
-                  - ec2:CreateNetworkInterface
-                  - ec2:DeleteNetworkInterface
-                  - ec2:AttachNetworkInterface
-                  - ec2:DetachNetworkInterface
+                  - ec2:*  
                 Resource: "*"
 
               # S3 Access
