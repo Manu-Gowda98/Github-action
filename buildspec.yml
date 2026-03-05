@@ -1,0 +1,44 @@
+version: 0.2
+
+env:
+  variables:
+    CLUSTER_NAME: "nginx-cluster"
+    AWS_REGION: "ap-south-1"
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo "Installing dependencies..."
+      - yum update -y
+      - yum install -y tar gzip jq
+
+      # Install kubectl
+      - echo "Installing kubectl..."
+      - curl -LO "https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.0/2024-03-11/bin/linux/amd64/kubectl"
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/
+
+      # Install helm
+      - echo "Installing Helm..."
+      - curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+  pre_build:
+    commands:
+      - echo "Authenticating to EKS cluster..."
+      - aws eks update-kubeconfig --region ap-south-1 --name nginx-cluster
+
+      - echo "Checking cluster access..."
+      - kubectl get nodes
+
+  build:
+    commands:
+      - echo "Deploying Helm Chart..."
+      - helm upgrade --install nginx ./nginx --namespace nginx --create-namespace
+
+  post_build:
+    commands:
+      - echo "Deployment completed!"
+      - kubectl get pods -n default
+      - kubectl get svc -n default

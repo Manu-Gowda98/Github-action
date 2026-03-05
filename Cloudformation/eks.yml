@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create EKS Cluster
+
+Parameters:
+  EKSClusterRoleARN:
+    Type: String
+    Description: IAM role ARN for EKS cluster
+
+Resources:
+  EKSCluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: nginx-cluster
+      Version: "1.28"
+      RoleArn: !Ref EKSClusterRoleARN
+      ResourcesVpcConfig:
+        SecurityGroupIds:
+          - sg-03c7d491ead4b428c
+        SubnetIds:
+          - subnet-0a501ae8950156e8a
+          - subnet-030dbee7d1358f4a4
+        EndpointPublicAccess: false
+        EndpointPrivateAccess: true
+      Logging:
+        ClusterLogging:
+          EnabledTypes:
+            - Type: api
+            - Type: audit
+      Tags:
+        - Key: app
+          Value: nginx
+
+Outputs:
+  ClusterName:
+    Value: !Ref EKSCluster
+  ClusterArn:
+    Value: !GetAtt EKSCluster.Arn

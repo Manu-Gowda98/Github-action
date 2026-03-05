@@ -1,0 +1,201 @@
+name: Greeting on variable day
+
+on:
+ push:
+    branches:
+      - main
+      - qa
+      - dev
+
+env:
+  DAY_OF_WEEK: Monday
+
+permissions:
+  id-token: write      # REQUIRED for OIDC authentication
+  contents: read 
+
+jobs:
+  greeting_job:
+    runs-on: ubuntu-latest
+    env:
+      Greeting: Welcome
+    steps:
+      - name: "Say Hello Mona it's Monday"
+        run: echo "$Greeting $First_Name. Today is $DAY_OF_WEEK!"
+        env:
+          First_Name: " to  github action  tutorial"
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::640740720651:role/Github-actionrole
+          aws-region: ap-south-1
+
+
+      - name: Validate CloudFormation Template
+        run: |
+          aws cloudformation validate-template --template-body file://Cloudformation/gha.yml
+          
+
+      - name: Deploy CloudFormation Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file Cloudformation/gha.yml \
+            --stack-name Github-actionrole  \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset
+
+      - name: Describe Stack Outputs
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name Github-actionrole  \
+            --query "Stacks[0].Outputs"
+
+
+  S3_Bucket_deploy_in_aws:
+    name: Deploy s3 bucket
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::640740720651:role/Github-actionrole
+          aws-region: ap-south-1
+
+
+      - name: Validate CloudFormation Template
+        run: |
+          aws cloudformation validate-template --template-body file://Cloudformation/s3-bucket.yml
+          
+
+      - name: Deploy CloudFormation Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file Cloudformation/s3-bucket.yml \
+            --stack-name s3-bucket-stack \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset
+
+      - name: Describe Stack Outputs
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name s3-bucket-stack \
+            --query "Stacks[0].Outputs"
+  eks_cluster:
+    name: eks_cluster_creation
+    runs-on: ubuntu-latest
+    needs: S3_Bucket_deploy_in_aws
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::640740720651:role/Github-actionrole
+          aws-region: ap-south-1
+
+      - name: Validate CloudFormation Template
+        run: |
+          aws cloudformation validate-template --template-body file://Cloudformation/eks.yml
+          aws cloudformation validate-template --template-body file://Cloudformation/eks-iam-role.yml
+      
+      - name: Check Stack Status
+        id: stackcheck
+        run: |
+          STATUS=$(aws cloudformation describe-stacks \
+            --stack-name eks-role-stack \
+            --query "Stacks[0].StackStatus" \
+            --output text 2>/dev/null || echo "STACK_NOT_FOUND")
+
+          echo "Stack status: $STATUS"
+
+          if [ "$STATUS" = "ROLLBACK_COMPLETE" ]; then
+            echo "Deleting failed stack..."
+            aws cloudformation delete-stack --stack-name eks-role-stack
+            aws cloudformation wait stack-delete-complete --stack-name eks-role-stack
+          fi
+      - name: Creating iam role for eks
+        run: |
+          aws cloudformation deploy \
+            --template-file Cloudformation/eks-iam-role.yml \
+            --stack-name eks-role-stack \
+            --capabilities CAPABILITY_NAMED_IAM
+              --no-fail-on-empty-changeset 
+      - name: Get IAM Role ARN
+        id: role
+        run: |
+          ROLE_ARN=$(aws cloudformation describe-stacks \
+            --stack-name eks-role-stack \
+            --query "Stacks[0].Outputs[?OutputKey=='EKSClusterRoleARN'].OutputValue" \
+            --output text)
+          echo "ROLE_ARN=$ROLE_ARN" >> $GITHUB_ENV
+
+      - name: Deploy EKS Cluster using CloudFormation
+        run: |
+          aws cloudformation deploy \
+           --template-file Cloudformation/eks.yml \
+           --stack-name eks-cluster-stack \
+           --capabilities CAPABILITY_NAMED_IAM \
+           --parameter-overrides EKSClusterRoleARN=$ROLE_ARN \
+           --no-fail-on-empty-changeset
+  eks-addons:
+    name: eks-addon
+    runs-on: ubuntu-latest
+    needs: eks_cluster
+    steps:
+       - name: Checkout Repository
+         uses: actions/checkout@v4
+
+       - name: Configure AWS credentials via OIDC
+         uses: aws-actions/configure-aws-credentials@v4
+         with:
+          role-to-assume: arn:aws:iam::640740720651:role/Github-actionrole
+          aws-region: ap-south-1
+
+       - name: Validate CloudFormation Template
+         run: |
+          aws cloudformation validate-template --template-body file://Cloudformation/addon.yml
+      
+      
+      
+       - name: Deploy EKS Add-ons
+         run: |
+           aws cloudformation deploy \
+            --template-file Cloudformation/addon.yml \
+            --stack-name eks-addons-stack \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides EKSClusterName=nginx-cluster
+  nginx-Deploy:
+    name: nginx deployment
+    needs: eks-addons
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Configure AWS credentials
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::640740720651:role/Github-actionrole
+          aws-region: ap-south-1
+
+      - name: Trigger AWS CodeBuild
+        run: |
+          aws codebuild start-build \
+           --project-name nginx-helm-deploy \
+           --environment-variables-override \
+           name=IMAGE_TAG,value=${{ github.sha }} \
+           name=ENV,value=prod
+
+
+
+           
+ 

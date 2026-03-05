@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IAM Role for GitHub Actions with explicit permissions
+
+Resources:
+  GitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: GitHubActionsRole
+
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:sub: repo:Manu-Gowda98/Github-action:ref:refs/heads/main
+                                                     
+      Policies:  
+        - PolicyName: GitHubActionsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+
+              # EKS Permissions
+              - Effect: Allow
+                Action:
+                  - eks:*
+                Resource: "*"
+
+              # EC2 networking required for EKS
+              - Effect: Allow
+                Action:
+                  - ec2:*  
+                Resource: "*"
+
+              # S3 Access
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketOwnershipControls
+                  - s3:GetBucketObjectLockConfiguration
+                  - s3:GetBucketNotification
+                  - s3:GetBucketLogging
+                  - s3:GetBucketCORS
+                  - s3:GetAnalyticsConfiguration
+                  - s3:GetAccelerateConfiguration
+                Resource:
+                  - !Sub arn:aws:s3:::manuprivatebucket123
+
+              - Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                Resource: "*"
+              # CloudFormation Access
+              - Effect: Allow
+                Action:
+                  - cloudformation:*
+                Resource: "*"
+
+              # CodeBuild Access
+              - Effect: Allow
+                Action:
+                  - codebuild:*
+                Resource: "*"
+
+              # IAM Read Only
+              - Effect: Allow
+                Action:
+                 - iam:*
+                Resource: "*"
+
+              # Pass Role Permission
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: "*"
+
+Outputs:
+  RoleArn:
+    Description: GitHub Actions Role ARN
+    Value: !GetAtt GitHubActionsRole.Arn

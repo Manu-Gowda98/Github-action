@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Addons for eks 
+
+Parameters:
+  EKSClusterName:
+    Type: String
+    Description: Name of the EKS cluster
+
+Resources:
+  VPCAddon:
+    Type: AWS::EKS::Addon
+    Properties:
+      ClusterName: !Ref EKSClusterName
+      AddonName: vpc-cni
+      ResolveConflicts: OVERWRITE
+      Tags:
+        - Key: app
+          Value: nginx
+
+  CoreDNSAddon:
+    Type: AWS::EKS::Addon
+    Properties:
+      ClusterName: !Ref EKSClusterName
+      AddonName: coredns
+      ResolveConflicts: OVERWRITE
+      Tags:
+        - Key: app
+          Value: nginx
