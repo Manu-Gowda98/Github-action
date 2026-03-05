@@ -39,26 +39,20 @@ Resources:
               # S3 Access
               - Effect: Allow
                 Action:
-                  - s3:GetReplicationConfiguration
-                  - s3:GetMetricsConfiguration
-                  - s3:GetLifecycleConfiguration
-                  - s3:GetInventoryConfiguration
-                  - s3:GetIntelligentTieringConfiguration
-                  - s3:GetEncryptionConfiguration
-                  - s3:GetBucketWebsite
-                  - s3:GetBucketVersioning
-                  - s3:GetBucketPublicAccessBlock
                   - s3:GetBucketOwnershipControls
                   - s3:GetBucketObjectLockConfiguration
                   - s3:GetBucketNotification
                   - s3:GetBucketLogging
                   - s3:GetBucketCORS
-                  - s3:GetBucketAbac
                   - s3:GetAnalyticsConfiguration
-                  - GetAccelerateConfiguration
-                  - CreateBucket
-                Resource: "*"
+                  - s3:GetAccelerateConfiguration
+                Resource:
+                  - !Sub arn:aws:s3:::manuprivatebucket123
 
+              - Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                Resource: "*"
               # CloudFormation Access
               - Effect: Allow
                 Action:
