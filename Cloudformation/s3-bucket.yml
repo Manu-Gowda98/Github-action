@@ -5,7 +5,7 @@ Resources:
   MyBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: manuprivatebucket123
+      BucketName: manuprivatebucket12345
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
